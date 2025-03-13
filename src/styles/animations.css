@@ -1,0 +1,156 @@
+@layer utilities {
+  /* Fade In Animation */
+  .animate-fade-in {
+    @apply opacity-0;
+    animation: fadeIn 0.3s ease-in forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Slide Up Animation */
+  .animate-slide-up {
+    @apply opacity-0 translate-y-4;
+    animation: slideUp 0.4s ease-out forwards;
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(1rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Scale In Animation */
+  .animate-scale-in {
+    @apply opacity-0 scale-95;
+    animation: scaleIn 0.3s ease-out forwards;
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Spin Animation */
+  .animate-spin-slow {
+    animation: spin 2s linear infinite;
+  }
+
+  /* Page Transition Animation */
+  .page-enter {
+    @apply opacity-0;
+  }
+
+  .page-enter-active {
+    @apply opacity-100 transition-opacity duration-300;
+  }
+
+  .page-exit {
+    @apply opacity-100;
+  }
+
+  .page-exit-active {
+    @apply opacity-0 transition-opacity duration-300;
+  }
+
+  /* Loading State Animation */
+  .loading-shimmer {
+    @apply relative overflow-hidden bg-gray-100 dark:bg-gray-800;
+  }
+
+  .loading-shimmer::after {
+    @apply absolute inset-0;
+    content: '';
+    animation: shimmer 1.5s infinite;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Hover Effect Animations */
+  .hover-lift {
+    @apply transition-transform duration-300;
+  }
+
+  .hover-lift:hover {
+    @apply -translate-y-1;
+  }
+
+  .hover-glow {
+    @apply transition-all duration-300;
+  }
+
+  .hover-glow:hover {
+    @apply brightness-110 shadow-lg;
+  }
+
+  /* Focus Ring Animation */
+  .focus-ring {
+    @apply transition-shadow duration-200;
+  }
+
+  .focus-ring:focus-visible {
+    @apply ring-2 ring-primary-indigo/50 ring-offset-2 dark:ring-offset-dark-navy;
+  }
+
+  /* Scroll Animation */
+  [data-scroll] {
+    @apply opacity-0 translate-y-4 transition-all duration-500;
+  }
+
+  [data-scroll].in-view {
+    @apply opacity-100 translate-y-0;
+  }
+
+  /* Error Shake Animation */
+  .animate-shake {
+    animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  }
+
+  @keyframes shake {
+    10%, 90% {
+      transform: translateX(-1px);
+    }
+    20%, 80% {
+      transform: translateX(2px);
+    }
+    30%, 50%, 70% {
+      transform: translateX(-2px);
+    }
+    40%, 60% {
+      transform: translateX(2px);
+    }
+  }
+}
+
+/* Import in index.css */
+/* @import './animations.css'; */
