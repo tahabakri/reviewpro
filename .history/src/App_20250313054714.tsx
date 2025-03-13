@@ -23,7 +23,6 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/get-started" element={<GetStarted />} />
-            <Route path="/competitive-analysis" element={<CompetitiveAnalysis />} />
           </Routes>
         </main>
         <Footer />

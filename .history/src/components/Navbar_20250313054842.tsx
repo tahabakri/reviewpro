@@ -86,7 +86,7 @@ const Navbar: React.FC = () => {
                   ${isMenuOpen ? 'rotate-45' : 'rotate-0'}
                 `}
                 aria-label="Main menu"
-                aria-expanded={isMenuOpen ? 'true' : 'false'}
+                aria-expanded={isMenuOpen}
               >
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path 

@@ -8,7 +8,6 @@ import Pricing from './pages/Pricing';
 import About from './pages/About';
 import SignIn from './pages/SignIn';
 import GetStarted from './pages/GetStarted';
-import CompetitiveAnalysis from './pages/CompetitiveAnalysis';
 
 function App() {
   return (
@@ -23,7 +22,6 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/get-started" element={<GetStarted />} />
-            <Route path="/competitive-analysis" element={<CompetitiveAnalysis />} />
           </Routes>
         </main>
         <Footer />

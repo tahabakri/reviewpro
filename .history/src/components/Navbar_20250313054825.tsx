@@ -10,7 +10,6 @@ const Navbar: React.FC = () => {
   const navItems = [
     { path: '/', label: 'Home' },
     { path: '/features', label: 'Features' },
-    { path: '/competitive-analysis', label: 'Analysis' },
     { path: '/pricing', label: 'Pricing' },
     { path: '/about', label: 'About' },
   ];
@@ -86,7 +85,7 @@ const Navbar: React.FC = () => {
                   ${isMenuOpen ? 'rotate-45' : 'rotate-0'}
                 `}
                 aria-label="Main menu"
-                aria-expanded={isMenuOpen ? 'true' : 'false'}
+                aria-expanded={isMenuOpen ? "true" : "false"}
               >
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path 
