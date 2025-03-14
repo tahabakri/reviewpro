@@ -1,0 +1,144 @@
+import { ETLPipeline } from '../../services/etl/pipeline';
+import { ReviewData } from '../../services/data-collection/base';
+import { AlertType } from '../../types';
+import { supabase } from '../../config';
+import { alertSystem } from '../../services/alerts/instance';
+import { notificationService } from '../../services/notifications';
+import { LanguageServiceClient } from '@google-cloud/language';
+import { createMockLanguageClient } from '../mocks/language-client.mock';
+import {
+  createMockReview,
+  createMockProcessedReview,
+  mockSupabaseResponse,
+} from '../helpers';
+
+jest.mock('@google-cloud/language', () => ({
+  LanguageServiceClient: jest.fn().mockImplementation(() => createMockLanguageClient()),
+}));
+
+jest.mock('../../config', () => ({
+  supabase: {
+    from: jest.fn().mockReturnThis(),
+    select: jest.fn().mockReturnThis(),
+    insert: jest.fn().mockReturnThis(),
+    eq: jest.fn().mockReturnThis(),
+  },
+  config: {
+    apis: {
+      google: {
+        serviceAccount: {
+          clientEmail: 'test@test.com',
+          privateKey: 'test-key',
+        },
+      },
+    },
+  },
+}));
+
+jest.mock('../../services/alerts/instance', () => ({
+  alertSystem: {
+    processAlert: jest.fn(),
+  },
+}));
+
+jest.mock('../../services/notifications', () => ({
+  notificationService: {
+    sendAlertNotification: jest.fn(),
+  },
+}));
+
+describe('ETLPipeline', () => {
+  let pipeline: ETLPipeline;
+  let mockLanguageClient: jest.Mocked<LanguageServiceClient>;
+  const mockReviews: ReviewData[] = [createMockReview()];
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockLanguageClient = createMockLanguageClient() as jest.Mocked<LanguageServiceClient>;
+    ((LanguageServiceClient as unknown) as jest.MockedClass<typeof LanguageServiceClient>)
+      .mockImplementation(() => mockLanguageClient);
+    pipeline = new ETLPipeline();
+  });
+
+  describe('processReviews', () => {
+    it('should process reviews with sentiment and theme analysis', async () => {
+      const mockProcessedReview = createMockProcessedReview({
+        entity_id: 'entity-1',
+      });
+
+      (supabase.from as jest.Mock)
+        .mockImplementationOnce(() => ({
+          insert: jest.fn().mockReturnThis(),
+          select: jest.fn().mockResolvedValueOnce(mockSupabaseResponse([mockProcessedReview])),
+        }));
+
+      const result = await pipeline.processReviews(mockReviews, 'entity-1');
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject(mockProcessedReview);
+      expect(mockLanguageClient.analyzeSentiment).toHaveBeenCalled();
+      expect(mockLanguageClient.classifyText).toHaveBeenCalled();
+    });
+
+    it('should handle empty content gracefully', async () => {
+      const emptyReview = createMockReview({ content: '' });
+      
+      (supabase.from as jest.Mock)
+        .mockImplementationOnce(() => ({
+          insert: jest.fn().mockReturnThis(),
+          select: jest.fn().mockResolvedValueOnce(mockSupabaseResponse([])),
+        }));
+
+      const result = await pipeline.processReviews([emptyReview], 'entity-1');
+
+      expect(result).toHaveLength(0);
+      expect(mockLanguageClient.analyzeSentiment).not.toHaveBeenCalled();
+      expect(mockLanguageClient.classifyText).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('checkAlerts', () => {
+    const mockAlert = {
+      id: 'alert-1',
+      entity_id: 'entity-1',
+      type: 'sentiment_drop' as AlertType,
+      conditions: { threshold: 0.5 },
+      active: true,
+    };
+
+    it('should process alerts and send notifications when triggered', async () => {
+      (supabase.from as jest.Mock)
+        .mockImplementationOnce(() => ({
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          single: jest.fn().mockResolvedValueOnce(mockSupabaseResponse(mockAlert)),
+        }));
+
+      (alertSystem.processAlert as jest.Mock).mockResolvedValueOnce(true);
+
+      await pipeline.checkAlerts('entity-1', 'sentiment_drop');
+
+      expect(alertSystem.processAlert).toHaveBeenCalledWith(mockAlert);
+      expect(notificationService.sendAlertNotification).toHaveBeenCalledWith(
+        mockAlert,
+        'entity-1'
+      );
+    });
+
+    it('should not send notifications when alert is not triggered', async () => {
+      (supabase.from as jest.Mock)
+        .mockImplementationOnce(() => ({
+          select: jest.fn().mockReturnThis(),
+          eq: jest.fn().mockReturnThis(),
+          single: jest.fn().mockResolvedValueOnce(mockSupabaseResponse(mockAlert)),
+        }));
+
+      (alertSystem.processAlert as jest.Mock).mockResolvedValueOnce(false);
+
+      await pipeline.checkAlerts('entity-1', 'sentiment_drop');
+
+      expect(alertSystem.processAlert).toHaveBeenCalledWith(mockAlert);
+      expect(notificationService.sendAlertNotification).not.toHaveBeenCalled();
+    });
+  });
+});
