@@ -46,16 +46,12 @@ export class GooglePlacesService {
   private baseUrl = 'https://maps.googleapis.com/maps/api/place';
 
   constructor() {
-    if (!process.env.GOOGLE_PLACES_API_KEY) {
-      throw new Error('GOOGLE_PLACES_API_KEY environment variable is not set');
+    this.apiKey = process.env.GOOGLE_PLACES_API_KEY || '';
+    if (!this.apiKey) {
+      console.error('CRITICAL: Google Places API key is missing');
+      throw new Error('Google Places API key is required');
     }
-    this.apiKey = process.env.GOOGLE_PLACES_API_KEY;
-    
-    if (!this.apiKey.trim()) {
-      throw new Error('GOOGLE_PLACES_API_KEY cannot be empty');
-    }
-    
-    console.info('Google Places Service initialized with API key');
+    console.info('Google Places Service initialized successfully');
   }
 
   async searchPlaces(query: string): Promise<GooglePlacesSearchResult[]> {
@@ -73,33 +69,15 @@ export class GooglePlacesService {
           params: {
             query,
             key: this.apiKey,
-          },
-          validateStatus: (status) => true // Don't throw on any status code
+          }
         }
-      );
-
-      // Log the entire response for debugging
-      console.log('Google Places API Response:', {
-        status: response.status,
-        statusText: response.statusText,
-        data: response.data
+      ).catch(error => {
+        console.error('Google Places API error:', error.response?.data || error.message);
+        if (error.response?.data?.error_message) {
+          throw new Error(`Google Places API error: ${error.response.data.error_message}`);
+        }
+        throw new Error(error.message);
       });
-
-      if (response.status !== 200) {
-        console.error('HTTP Error:', response.status, response.statusText);
-        throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
-      }
-
-      if (response.data.status === 'REQUEST_DENIED') {
-        console.error('API Key Error:', response.data.error_message);
-        throw new Error('Invalid or restricted Google Places API key');
-      }
-
-      if (response.data.status !== 'OK' && response.data.status !== 'ZERO_RESULTS') {
-        const errorMessage = response.data.error_message || `API Error - Status: ${response.data.status}`;
-        console.error('API Error:', errorMessage);
-        throw new Error(errorMessage);
-      }
 
       console.info(`Google Places API response status: ${response.data.status}`);
       

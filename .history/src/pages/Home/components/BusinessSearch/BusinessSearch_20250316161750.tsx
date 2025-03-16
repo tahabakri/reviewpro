@@ -46,7 +46,6 @@ const BusinessSearch: React.FC<BusinessSearchProps> = ({
         <Button
           onClick={onSearch}
           disabled={loading || !searchQuery.trim()}
-          className="w-full"
         >
           {loading ? 'Searching...' : 'Search Business'}
         </Button>
@@ -55,29 +54,11 @@ const BusinessSearch: React.FC<BusinessSearchProps> = ({
       {/* Error Message */}
       {error && (
         <motion.div
-          className="max-w-md mx-auto mb-8 text-center"
+          className="max-w-md mx-auto mb-8 text-red-500 text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <p className="text-red-600 dark:text-red-400">
-              <span className="font-semibold">Error: </span>
-              {error}
-            </p>
-            <p className="text-red-500 dark:text-red-300 text-sm mt-1">
-              {error.toLowerCase().includes('api key') ? (
-                'API configuration issue. Please contact support.'
-              ) : error.toLowerCase().includes('no results') ? (
-                'Try different search terms or location'
-              ) : error.toLowerCase().includes('over_query_limit') ? (
-                'Service is temporarily busy. Please try again in a few minutes.'
-              ) : error.toLowerCase().includes('invalid') ? (
-                'Please check your search input and try again'
-              ) : (
-                'An error occurred. Please try again.'
-              )}
-            </p>
-          </div>
+          {error}
         </motion.div>
       )}
 
@@ -89,21 +70,21 @@ const BusinessSearch: React.FC<BusinessSearchProps> = ({
           animate="visible"
           variants={staggerContainer}
         >
-          <h3 className="heading-md text-center">Search Results</h3>
-          <div className="stack-y-4">
+          <h3 className="text-xl font-bold mb-4 text-center">Search Results</h3>
+          <div className="space-y-4">
             {searchResults.map((business) => (
               <motion.div
                 key={business.placeId}
                 variants={slideUp}
-                className="cursor-pointer hover-lift"
+                className="cursor-pointer"
                 onClick={() => onSelectBusiness(business)}
               >
-                <Card variant="glass" className="p-4">
-                  <h4 className="heading-md mb-1">{business.name}</h4>
-                  <p className="text-body">{business.location}</p>
+                <Card variant="glass" className="p-4 hover:shadow-xl transition-all duration-300">
+                  <h4 className="text-lg font-bold">{business.name}</h4>
+                  <p className="text-gray-600 dark:text-gray-300">{business.location}</p>
                   <div className="flex items-center mt-2">
                     <span className="text-primary-indigo font-bold">{business.rating}</span>
-                    <span className="text-dim ml-1">
+                    <span className="text-gray-600 dark:text-gray-300 ml-1">
                       ({business.reviewCount} reviews)
                     </span>
                   </div>

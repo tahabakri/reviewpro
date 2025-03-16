@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { GooglePlacesService } from '../services/google-places/index.js';
+import { GooglePlacesService } from '../services/google-places';
 
 const router = Router();
 let googlePlacesService: GooglePlacesService;
@@ -7,13 +7,11 @@ let googlePlacesService: GooglePlacesService;
 // Validate environment setup and initialize service
 try {
   if (!process.env.GOOGLE_PLACES_API_KEY) {
-    throw new Error('GOOGLE_PLACES_API_KEY environment variable is not set');
+    console.error('CRITICAL: GOOGLE_PLACES_API_KEY environment variable is not set');
   }
   googlePlacesService = new GooglePlacesService();
-  console.info('Google Places service initialized successfully');
 } catch (error) {
   console.error('Failed to initialize Google Places service:', error);
-  throw error; // Re-throw to prevent router from being used without service
 }
 
 router.get('/search', async (req, res) => {
@@ -64,33 +62,24 @@ router.get('/search', async (req, res) => {
       query: req.query.query
     });
 
-    // Specialized error handling
+    // Better error classification
     let statusCode = 500;
-    let errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    let errorMessage = 'Internal server error';
     
-    if (errorMessage.includes('INVALID_REQUEST')) {
-      statusCode = 400;
-    } else if (errorMessage.includes('API key')) {
-      statusCode = 401;
-    } else if (errorMessage.includes('OVER_QUERY_LIMIT')) {
-      statusCode = 429;
-    } else if (errorMessage.includes('REQUEST_DENIED')) {
-      statusCode = 403;
-    } else if (errorMessage.includes('ZERO_RESULTS')) {
-      statusCode = 404;
-      errorMessage = 'No results found for this search';
-    } else if (errorMessage.includes('Google Places API error')) {
-      statusCode = 502;
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      
+      if (error.message.includes('API key')) {
+        statusCode = 401; // Unauthorized due to API key issues
+      } else if (error.message.includes('API error')) {
+        statusCode = 502; // Bad Gateway for external API issues
+      }
     }
 
-    const errorResponse = {
+    return res.status(statusCode).json({
       error: 'Failed to search places',
-      details: errorMessage,
-      status: statusCode
-    };
-
-    console.error('Search error response:', errorResponse);
-    return res.status(statusCode).json(errorResponse);
+      details: errorMessage
+    });
   }
 });
 
@@ -110,31 +99,10 @@ router.get('/details/:placeId', async (req, res) => {
     return res.json(details);
   } catch (error) {
     console.error('Error getting place details:', error);
-    // Specialized error handling for place details
-    let statusCode = 500;
-    let errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-    if (errorMessage.includes('INVALID_REQUEST')) {
-      statusCode = 400;
-    } else if (errorMessage.includes('API key')) {
-      statusCode = 401;
-    } else if (errorMessage.includes('OVER_QUERY_LIMIT')) {
-      statusCode = 429;
-    } else if (errorMessage.includes('REQUEST_DENIED')) {
-      statusCode = 403;
-    } else if (errorMessage.includes('NOT_FOUND')) {
-      statusCode = 404;
-      errorMessage = 'Place not found';
-    }
-
-    const errorResponse = {
+    return res.status(500).json({
       error: 'Failed to get place details',
-      details: errorMessage,
-      status: statusCode
-    };
-
-    console.error('Details error response:', errorResponse);
-    return res.status(statusCode).json(errorResponse);
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 

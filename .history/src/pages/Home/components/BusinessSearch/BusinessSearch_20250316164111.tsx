@@ -65,17 +65,7 @@ const BusinessSearch: React.FC<BusinessSearchProps> = ({
               {error}
             </p>
             <p className="text-red-500 dark:text-red-300 text-sm mt-1">
-              {error.toLowerCase().includes('api key') ? (
-                'API configuration issue. Please contact support.'
-              ) : error.toLowerCase().includes('no results') ? (
-                'Try different search terms or location'
-              ) : error.toLowerCase().includes('over_query_limit') ? (
-                'Service is temporarily busy. Please try again in a few minutes.'
-              ) : error.toLowerCase().includes('invalid') ? (
-                'Please check your search input and try again'
-              ) : (
-                'An error occurred. Please try again.'
-              )}
+              Please check your input and try again
             </p>
           </div>
         </motion.div>

@@ -55,29 +55,11 @@ const BusinessSearch: React.FC<BusinessSearchProps> = ({
       {/* Error Message */}
       {error && (
         <motion.div
-          className="max-w-md mx-auto mb-8 text-center"
+          className="max-w-md mx-auto mb-8 text-red-500 text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <p className="text-red-600 dark:text-red-400">
-              <span className="font-semibold">Error: </span>
-              {error}
-            </p>
-            <p className="text-red-500 dark:text-red-300 text-sm mt-1">
-              {error.toLowerCase().includes('api key') ? (
-                'API configuration issue. Please contact support.'
-              ) : error.toLowerCase().includes('no results') ? (
-                'Try different search terms or location'
-              ) : error.toLowerCase().includes('over_query_limit') ? (
-                'Service is temporarily busy. Please try again in a few minutes.'
-              ) : error.toLowerCase().includes('invalid') ? (
-                'Please check your search input and try again'
-              ) : (
-                'An error occurred. Please try again.'
-              )}
-            </p>
-          </div>
+          {error}
         </motion.div>
       )}
 

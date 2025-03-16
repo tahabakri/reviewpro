@@ -1,27 +1,14 @@
 import { config } from 'dotenv';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { app } from './app.js';
+import { app } from './app';
 
 // Get current file path in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load environment variables from the server .env file
-const envPath = resolve(__dirname, '../.env');
-console.log('Loading environment variables from:', envPath);
-config({ path: envPath });
-
-// Verify critical environment variables
-const requiredEnvVars = ['GOOGLE_PLACES_API_KEY', 'PORT'];
-const missingVars = requiredEnvVars.filter(key => !process.env[key]);
-
-if (missingVars.length > 0) {
-  console.error('Missing required environment variables:', missingVars);
-  process.exit(1);
-}
-
-console.log('Environment variables loaded successfully');
+// Load environment variables from the root .env file
+config({ path: resolve(__dirname, '../../.env') });
 
 // Define port with fallback
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -33,12 +20,12 @@ app.start(PORT).catch(error => {
 });
 
 // Handle uncaught errors
-process.on('uncaughtException', (error: Error) => {
+process.on('uncaughtException', (error) => {
   console.error('Uncaught exception:', error);
   app.shutdown().catch(() => process.exit(1));
 });
 
-process.on('unhandledRejection', (reason: unknown) => {
+process.on('unhandledRejection', (reason) => {
   console.error('Unhandled rejection:', reason);
   app.shutdown().catch(() => process.exit(1));
 });

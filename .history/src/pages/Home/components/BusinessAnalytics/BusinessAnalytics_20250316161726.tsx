@@ -11,28 +11,28 @@ interface BusinessAnalyticsProps {
 
 const BusinessAnalytics: React.FC<BusinessAnalyticsProps> = ({ details }) => (
   <motion.div
-    className="grid-2-col"
+    className="grid grid-cols-1 md:grid-cols-2 gap-8"
     initial="hidden"
     whileInView="visible"
     viewport={{ once: true }}
     variants={staggerContainer}
   >
     <motion.div variants={slideUp}>
-      <Card variant="glass" className="card-glass">
-        <h3 className="heading-lg mb-4">Overall Rating</h3>
+      <Card variant="glass" className="p-8 h-full">
+        <h3 className="text-2xl font-bold font-heading mb-4">Overall Rating</h3>
         <div className="text-5xl font-bold text-primary-indigo">
           {details.overallRating.toFixed(1)}
         </div>
-        <div className="text-body">
+        <div className="text-gray-600 dark:text-gray-300">
           Based on {details.reviewCount} reviews
         </div>
       </Card>
     </motion.div>
 
     <motion.div variants={slideUp}>
-      <Card variant="glass" className="card-glass">
-        <h3 className="heading-lg mb-4">Sentiment Analysis</h3>
-        <div className="stack-y-4">
+      <Card variant="glass" className="p-8 h-full">
+        <h3 className="text-2xl font-bold font-heading mb-4">Sentiment Analysis</h3>
+        <div className="space-y-4">
           <SentimentBar
             label="Positive"
             value={details.sentimentAnalysis.positive}

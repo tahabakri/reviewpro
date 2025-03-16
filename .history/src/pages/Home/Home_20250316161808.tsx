@@ -32,38 +32,13 @@ const Home: React.FC = () => {
       setBusinessDetails(null);
 
       const response = await fetch(`/api/google-places/search?query=${encodeURIComponent(searchQuery)}`);
-      let data;
-      try {
-        const text = await response.text();
-        data = text ? JSON.parse(text) : null;
-      } catch (parseError) {
-        console.error('Failed to parse response:', parseError);
-        throw new Error('Service response error - please try again');
-      }
-
-      if (!response.ok) {
-        // Handle specific error types from the API
-        if (data?.error && data?.details) {
-          throw new Error(data.details);
-        }
-        throw new Error('Failed to search businesses - please try again');
-      }
+      if (!response.ok) throw new Error('Failed to search businesses');
       
-      if (!data || !Array.isArray(data)) {
-        console.error('Invalid response format:', data);
-        throw new Error('Unexpected response format from server');
-      }
-
-      if (data.length === 0) {
-        setError('No businesses found - try different search terms');
-        return;
-      }
-
-      setSearchResults(data);
+      const results = await response.json();
+      setSearchResults(results);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-      setError(errorMessage);
-      console.error('Search error:', { error: err, query: searchQuery });
+      setError('Failed to search businesses. Please try again.');
+      console.error('Search error:', err);
     } finally {
       setLoading(false);
     }
@@ -77,34 +52,13 @@ const Home: React.FC = () => {
       setBusinessDetails(null);
 
       const response = await fetch(`/api/google-places/details/${business.placeId}`);
-      let data;
-      try {
-        const text = await response.text();
-        data = text ? JSON.parse(text) : null;
-      } catch (parseError) {
-        console.error('Failed to parse response:', parseError);
-        throw new Error('Service response error - please try again');
-      }
-
-      if (!response.ok) {
-        // Handle specific error types from the API
-        if (data?.error && data?.details) {
-          throw new Error(data.details);
-        }
-        throw new Error('Failed to get business details - please try again');
-      }
+      if (!response.ok) throw new Error('Failed to get business details');
       
-      if (!data || typeof data !== 'object') {
-        console.error('Invalid response format:', data);
-        throw new Error('Unexpected response format from server');
-      }
-
-      setBusinessDetails(data);
+      const details = await response.json();
+      setBusinessDetails(details);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-      setError(errorMessage);
-      console.error('Details error:', { error: err, businessId: business.placeId });
-      setSelectedBusiness(null);
+      setError('Failed to get business details. Please try again.');
+      console.error('Details error:', err);
     } finally {
       setLoading(false);
     }
@@ -123,11 +77,11 @@ const Home: React.FC = () => {
       <FeaturesSection />
 
       {/* Business Review Analysis Section */}
-      <section className="section-container">
-        <h2 className="heading-xl mb-4 text-center">
-          Analyze Your <span className="text-gradient">Business Reviews</span>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <h2 className="text-4xl font-bold font-heading mb-4 text-center">
+          Analyze Your <span className="text-gradient bg-clip-text text-transparent bg-gradient-to-r from-primary-indigo to-primary-purple">Business Reviews</span>
         </h2>
-        <p className="text-xl text-body section-content mb-12">
+        <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto text-center mb-12">
           Get insights into your customer reviews and improve your online reputation.
         </p>
 

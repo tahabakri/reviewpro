@@ -7,13 +7,11 @@ let googlePlacesService: GooglePlacesService;
 // Validate environment setup and initialize service
 try {
   if (!process.env.GOOGLE_PLACES_API_KEY) {
-    throw new Error('GOOGLE_PLACES_API_KEY environment variable is not set');
+    console.error('CRITICAL: GOOGLE_PLACES_API_KEY environment variable is not set');
   }
   googlePlacesService = new GooglePlacesService();
-  console.info('Google Places service initialized successfully');
 } catch (error) {
   console.error('Failed to initialize Google Places service:', error);
-  throw error; // Re-throw to prevent router from being used without service
 }
 
 router.get('/search', async (req, res) => {

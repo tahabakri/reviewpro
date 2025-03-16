@@ -48,68 +48,54 @@ export class Application {
   async initialize(): Promise<void> {
     try {
       // Check required environment variables
-      const requiredEnv = ['GOOGLE_PLACES_API_KEY'];
+      const requiredEnv = ['REDIS_URL', 'GEMINI_API_KEY', 'GOOGLE_PLACES_API_KEY'];
       const missing = requiredEnv.filter(key => !process.env[key]);
       if (missing.length > 0) {
         throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
       }
 
-      // Initialize optional services
-      if (process.env.REDIS_URL) {
-        try {
-          this.redis = new Redis(process.env.REDIS_URL);
-          console.info('Redis connection established');
+      // Initialize Redis connection
+      this.redis = new Redis(process.env.REDIS_URL!);
 
-          if (process.env.GEMINI_API_KEY) {
-            const geminiClient = new GeminiClient({
-              apiKey: process.env.GEMINI_API_KEY,
-              maxRetries: 3,
-              retryDelay: 1000
-            });
+      // Initialize Gemini client
+      const geminiClient = new GeminiClient({
+        apiKey: process.env.GEMINI_API_KEY!,
+        maxRetries: 3,
+        retryDelay: 1000
+      });
 
-            this.sentimentAnalyzer = new SentimentAnalyzer(
-              geminiClient,
-              this.redis,
-              parseInt(process.env.CACHE_TTL || '3600', 10)
-            );
+      // Initialize sentiment analyzer
+      this.sentimentAnalyzer = new SentimentAnalyzer(
+        geminiClient,
+        this.redis,
+        parseInt(process.env.CACHE_TTL || '3600', 10)
+      );
 
-            this.wsHandler = new ReviewWebSocketHandler(this.server, {
-              redis: this.redis,
-              analyzer: this.sentimentAnalyzer
-            });
-          }
-        } catch (error) {
-          console.warn('Failed to initialize Redis connection:', error);
-          console.info('Continuing without Redis-dependent features');
-        }
-      } else {
-        console.info('Redis URL not provided - running without Redis-dependent features');
-      }
+      // Initialize WebSocket handler
+      this.wsHandler = new ReviewWebSocketHandler(this.server, {
+        redis: this.redis,
+        analyzer: this.sentimentAnalyzer
+      });
 
-      // Initialize optional notification and alert services
-      if (this.redis) {
-        try {
-          validateNotificationConfig();
-          await notificationService.initialize();
+      // Initialize notification service
+      validateNotificationConfig();
+      await notificationService.initialize();
 
-          this.sentimentAlertService = new SentimentAlertService(this.redis, {
-            thresholds: {
-              sentimentDrop: parseFloat(process.env.ALERT_SENTIMENT_DROP_THRESHOLD || '0.2'),
-              negativeSpike: parseFloat(process.env.ALERT_NEGATIVE_SPIKE_THRESHOLD || '0.3'),
-              volumeIncrease: parseFloat(process.env.ALERT_VOLUME_INCREASE_THRESHOLD || '2'),
-              timeWindow: parseInt(process.env.ALERT_TIME_WINDOW || '3600000', 10)
-            },
-            checkInterval: parseInt(process.env.ALERT_CHECK_INTERVAL || '60000', 10)
-          });
-          
-          const placesToMonitor = await this.getPlacesToMonitor();
-          if (placesToMonitor.length > 0) {
-            await this.sentimentAlertService.startMonitoring(placesToMonitor[0]);
-          }
-        } catch (error) {
-          console.warn('Failed to initialize notification services:', error);
-          console.info('Continuing without notification features');
-        }
+      // Initialize alert service
+      this.sentimentAlertService = new SentimentAlertService(this.redis, {
+        thresholds: {
+          sentimentDrop: parseFloat(process.env.ALERT_SENTIMENT_DROP_THRESHOLD || '0.2'),
+          negativeSpike: parseFloat(process.env.ALERT_NEGATIVE_SPIKE_THRESHOLD || '0.3'),
+          volumeIncrease: parseFloat(process.env.ALERT_VOLUME_INCREASE_THRESHOLD || '2'),
+          timeWindow: parseInt(process.env.ALERT_TIME_WINDOW || '3600000', 10)
+        },
+        checkInterval: parseInt(process.env.ALERT_CHECK_INTERVAL || '60000', 10)
+      });
+      
+      // Start monitoring for all subscribed places
+      const placesToMonitor = await this.getPlacesToMonitor();
+      if (placesToMonitor.length > 0) {
+        await this.sentimentAlertService.startMonitoring(placesToMonitor[0]);
       }
 
       // Set up routes
